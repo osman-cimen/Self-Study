@@ -16,7 +16,7 @@ with app.app_context():
     data = text("""
     INSERT INTO users
     VALUES
-        ("Sukru", "sukru@amazon.com"),
+        ("Osman", "osman@amazon.com"),
         ("Mucahit", "mucahit@google.com"),
         ("Serafettin", "serafettin@bmw.com"),
         ("Murat", "murat@mercedes.com"),
