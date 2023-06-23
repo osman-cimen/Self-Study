@@ -31,4 +31,4 @@ if __name__ == '__main__':
 
 
 # isdecimal():the function is used to check if all the letters in the string are numbers or not 
-# The string should only consist of numbers
+# The String Should only consist of numbers
