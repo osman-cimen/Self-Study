@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This phonebook-application project includes an ASG, an ELB, a Listener, a Launch Template, 3 security Groups, a RDS and also
+  a Target Group.
+Parameters:
+  VPC:
+    Description: phonebookvpc
+    Type: AWS::EC2::VPC::Id
+  KeyName:
+    Description: select your key-pair
+    Type: AWS::EC2::KeyPair::KeyName
+  Subnets:
+    Description: Please select your subnets
+    Type: List<AWS::EC2::Subnet::Id>
+
+Resources:
+  ELBSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ELB SecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VPC
+
+  Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Ec2 SecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VPC
+
+  MyLT:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-090e0fc566929d98b
+        InstanceType: t2.micro
+        KeyName: !Ref KeyName
+        SecurityGroupIds:
+          - !GetAtt Ec2SecGroup.groupId
+        UserData:
+          Fn::Base64: !Sub
+            - |
+              #! /bin/bash
+              yum update -y
+              yum install python3 -y
+              pip3 install flask
+              pip3 install flask_mysql
+              echo "${MyDBURL}" > /home/ec2-user/dbserver.endpoint
+              TOKEN="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"
+              FOLDER="https://$TOKEN"
+              curl -s --create-dirs -o "/home/ec2-user/templates/index.html" -L "$FOLDER"/templates/index.html
+              curl -s --create-dirs -o "/home/ec2-user/templates/add-update.html" -L "$FOLDER"/templates/add-update.html
+              curl -s --create-dirs -o "/home/ec2-user/templates/delete.html" -L "$FOLDER"/templates/delete.html
+              curl -s --create-dirs -o "/home/ec2-user/app.py" -L "$FOLDER"/phonebook-app.py
+              python3 /home/ec2-user/app.py
+            - MyDBURL: !GetAtt DBInstance.Endpoint.Address
+
+      TagSpecifications:
+        - ResourceType: instance
+          Tags:
+            - Key: Name
+              Value: !Sub Web server of ${AWS::StackName} Stack
+      VersionDescription: "String"
+Outputs:
